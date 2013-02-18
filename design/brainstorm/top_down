@@ -1,0 +1,56 @@
+
+load everything
+	look in a path (set in the OS's environment, or on command line?)
+		load all the dynamic libraries
+		if it doens't have a registry, then warn/ignore
+	open the Aladdin executable, for each line:
+		make sure the basic syntax is correct
+		if instruction:
+			look up or load the operation from exactly one library
+			when loading: get microcide and a validator
+			call validator on the line
+	TODO figure out how to put it into the data structures
+	TODO link all the labels together
+	cleanup
+initialize ip
+main loop
+	fetch ip++
+	call microcode with operands
+		validate operands
+		decode: dereference anything you need
+		execute: perform whatever logic
+		[any queries on ip up to this point return ip-1]
+		update (optional): either ip=X or --ip+=X
+	handle interrupts
+dump persistent data (TODO how to specify what to dump?)
+cleanup
+
+
+validation:
+	reading an undefined raises an ReadUndefinedException: can be caught by contributor
+	contributor can raise InvalidOperandsException to crash the machine
+	validation should be the only way to turn an Operand union into a bigint or address type
+decode:
+	there will be a limited set of decoders supplied (do/don't dereference, then expect int/address)
+execute:
+	bigints have their usual operations
+	address has methods get, set, del, exists-p
+	any data structures can be used external to the VM, just as long as data is properly translated in and out
+update:
+	if none done, then ++ip
+	if ip updated with int, the this cycle's ip will be += the int for next cycle
+	if ip updated with address, next cycle's ip = address
+
+
+
+users simply write code using the libraries of plugins they want
+contributors (plugin-writers) are responsible for making sure the microcode is correct: call what validation you need, and only interact through the supplied interface
+the VM developer is responsible for plugin interface, control flow, error handing, validation, loading/cleanup
+
+
+open the asm files
+find all the loadable modules in a path
+begin reading through the asm files in order
+	
+
+

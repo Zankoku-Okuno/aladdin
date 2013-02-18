@@ -1,0 +1,28 @@
+
+((
+what might we put in a header?
+	a memory prefix placed on every text and data label: namespace-like
+	informational (non-executed) requirements on what labels and operations are expected in the full linkage
+	versioning information
+		what version am I?
+		I am backwards-compatible to at least verion X
+		I want a version of LIB at least backwards-compatible w/ X
+I should come up with a way to handle multiprocessing
+	device identifiers are the only weird thing
+	we can just share the (immutable) text segment, and pump in data through message-passing
+	mp_fork $r1 creates a new initially sleeping machine and laces an identifier (bigint) in $r1
+	mp_exec $r1 $r2 machine *$r1 wakes at ip=*$r2 (label) or ip+=*$r2
+	mp_send/mp_get $r1 $r2 $r3: talk to machine $r1 to copy *$r3 into *$r2
+	mp_block $r1 $r2: sleep and instruct machine $r1 to wake caller when $r2 is not zero, null or undef
+						if $r2 is zero/null, then block until $r1 halts or self-sleeps
+	mp_pause/mp_kill $r1: tell machine *$r1 to sleep/halt
+	( mp_sleep: cause the machine to sleep; mp_wake: cause parent to wake up
+		these maybe should not be: the parent is the controller, though it might block )
+	mp_call $r1 $r2: cause machine $r1 to execute "call *$r2"
+	mp_query $r1 $r2: puts -1, 0 or 1 in $r2 if machine *r1 is dead(halted), sleeping or awake
+	and, I think each machine should have exactly one parent: the network topology is a DAG
+	if a machine is killed, so are its children
+	mp_post $r1 $r2 $r3: let machine *$r1 read from $r3 through its $r2, neither machine should write to the memory while the child has a reference
+	mp_unpost $r1 $r2: del $r2 on machine *$r1 (so now we can write to the memory)
+	(I'm not sure post/unpost can rightly be implemented in D, but I prolly need to support const/texture memory)
+))

@@ -1,0 +1,18 @@
+.header
+
+.text
+	movi t.0 1
+	mov t.1 OBJ.2
+	ld t.1 t.1
+	ld t.1 t.1
+DO:
+	addi t.0 1
+	beq t.0 t.1 END
+	j DO
+END:
+.data
+OBJ {
+	[ &OBJ.FIELD1, &OBJ.FIELD2 ]
+	FIELD1: 4
+	FIELD2: 10
+}

@@ -16,8 +16,6 @@ Requirements
 ============
 
 * D compiler
-* Dynamic Libraries for D:
-	one of my own projects to bring dynamic linking to D. currently, the library only supports glibc-compatible dlfcn.h, so you're also limited to UNIX
 
 Install
 =======
@@ -38,6 +36,6 @@ Working
 Future Work
 -----------
 
- * Make dynamic library loading less dependent on glibc and POSIX.
+ * Make dynamic library loading less dependent on POSIX.
  * Make build process more easily comfigurable and portable.
 

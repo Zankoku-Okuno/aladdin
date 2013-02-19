@@ -1,15 +1,47 @@
+/*
+ *  ontology.d
+ *  This file is part of the Aladdin virtual machine.
+ *  Copyright (c) 2013, Okuno Zankoku
+ *  All rights reserved. 
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *
+ *  Redistributions of source code must retain the above copyright notice, this 
+ *  list of conditions and the following disclaimer.
+ *
+ *  Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation
+ *  and/or other materials provided with the distribution.
+ *
+ *  Neither the name of Okuno Zankoku nor the names of contributors may be used
+ *  to endorse or promote products derived from this software without specific
+ *  prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY Okuo Zankoku "AS IS" AND ANY EXPRESS OR IMPLIED
+ *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ *  EVENT SHALL {{THE COPYRIGHT HOLDER OR CONTRIBUTORS}} BE LIABLE FOR ANY
+ *  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ *  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ *  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 module aladdin.core.ontology;
 
 
-//import std.bigint : BigInt;
-alias long BigInt; //TODO
+//import std.bigint : BigInt = Number;
+alias long Number; //TODO
 
 /*
  * A label points to a named (i.e. labelled) piece of memory.
  * Labels are relative to the environment in which they are evaluated and only access one memory level down.
  */
 struct Label {
-	int id;
+	uint id; //TODO optimize for 32- vs. 64-bit
 }
 
 /*
@@ -18,11 +50,13 @@ struct Label {
  * There are no zero-length addresses.
  */
 class Address {
-
+private:
 	Node[] data;
 
-	Address opBinary(const Address that) const 
-	in {
+public:
+	override
+	Address opBinary(string s)(const Address that) const
+	if (s == "~") in {
 		assert (data.length > 0);
 	}
 	body {
@@ -49,7 +83,7 @@ private:
 		bool is_number;
 		@property is_label() { return !this.is_number; }
 		union U {
-			BigInt number;
+			Number number;
 			Label label;
 		};
 		U as;
@@ -66,42 +100,6 @@ private:
 
 }
 
-/*
- * A datum is the fundamental data type of the virtual machine.
- * Data may be either a single arbitrary-precision integer or address.
- */
-struct Datum {
+void main(string[] args) {
 
-	bool is_number;
-	@property bool is_address() { return !is_number; }
-
-	private union U {
-		BigInt number;
-		Address address;
-	}
-	U as;
-
-
-	this(BigInt value) {
-		this.as.number = value;
-		this.is_number = true;
-	}
-	this(Address value) {
-		this.as.address = value;
-		this.is_number = false;
-	}
 }
-
-/*
- * MemoryCells are responsible for tracking all data in the application.
- * Each cell of memory can store a datum (integer of address).
- * With each memory is associated two sub-memories: an array and a set of labeled memories.
- */
-struct MemoryCell {
-	Datum datum;
-	MemoryCell*[int] ordered;
-	MemoryCell*[Label] address;
-}
-
-
-

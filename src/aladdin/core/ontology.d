@@ -37,7 +37,7 @@ module aladdin.core.ontology;
  *  Publicly, Aladdin supports only this kind of number to maintatin architecture-independence.
  */
 //import std.bigint : BigInt = Number;
-alias long Number; //TODO
+alias long Number; //STUB
 
 /*
  *  A label points to a named (i.e. labelled) piece of memory.
@@ -74,15 +74,32 @@ public:
 	}
 	
 	/* Addresses may be appended with one another. */
-	override
 	Address opBinary(string s)(const Address that) const
-	if (s == "~") in {
+	if (s == "~")
+	in {
 		assert (data.length > 0);
+	}
+	out (result) {
+		assert (result.data.length == this.data.length + that.data.length);
+		uint i;
+		for(i = 0; i < this.data.length; ++i)
+			assert (result.data[i] == this.data[i]);
+		for( ; i < result.data.length; ++i)
+			assert (result.data[i] == that.data[i-this.data.length]);
 	}
 	body {
 		auto acc = new Address();
 		acc.data = cast(Node[])(this.data ~ that.data); //UNSPIFFY why do I need the cast? a copy of a const should not be const
 		return acc;
+	}
+	unittest {
+		import std.stdio;
+		scope(success) write('.');
+		scope(failure) write('F');
+		auto a = new Address(358), b = new Address(Label(0));
+		auto c = a ~ b;
+		c.data[1] = Node(2);
+		assert (!b.data[0].is_number && b.data[0].as.label.id == 0);
 	}
 
 	//TODO dereference
@@ -100,14 +117,13 @@ public:
 		return acc;
 	}
 
+	//REFAC to a AddressBuilder subclass, add a factory to create addresses from AddressBuilders
 	//append a node directly instead of creating an address first
-	override
 	Address opBinary(string s)(Number next)
 	if (s == "~") body {
 		data ~= Node(next);
 		return this;
 	}
-	override
 	Address opBinary(string s)(Label next)
 	if (s == "~") body {
 		data ~= Node(next);
@@ -117,6 +133,7 @@ public:
 private:
 	this() {}
 
+	/* Abstraction over labels/offsets as elements of a full address. */
 	struct Node {
 		bool is_number;
 		@property is_label() { return !this.is_number; }

@@ -3,9 +3,14 @@
 
 all: prereqs
 
+check: src/aladdin/core/ontology.d
+	gdc -Isrc -funittest test/dummy.d $^ -o unittest
+	./unittest
+
 clean:
 	-rm bin/*
 	-rm src/dlfcn.di
+	-rm ./a.out
 
 # Prerequisites
 

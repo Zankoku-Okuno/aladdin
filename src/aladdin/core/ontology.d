@@ -32,28 +32,48 @@
 
 module aladdin.core.ontology;
 
-
+/*
+ *  A Number is an aribtrary-precision signed integer.
+ *  Publicly, Aladdin supports only this kind of number to maintatin architecture-independence.
+ */
 //import std.bigint : BigInt = Number;
 alias long Number; //TODO
 
 /*
- * A label points to a named (i.e. labelled) piece of memory.
- * Labels are relative to the environment in which they are evaluated and only access one memory level down.
+ *  A label points to a named (i.e. labelled) piece of memory.
+ *  Labels are relative to the environment in which they are evaluated and only access one memory level down.
  */
 struct Label {
 	uint id; //TODO optimize for 32- vs. 64-bit
 }
 
 /*
- * An address is a pointer to a piece of memory.
- * They may be relative (such as during concatenation), but are always absolute when dereferenced.
- * There are no zero-length addresses.
+ *  An address is a pointer to a piece of memory.
+ *  They may be relative (such as during concatenation), but are always absolute when dereferenced.
+ *  There are no zero-length addresses.
  */
 class Address {
 private:
 	Node[] data;
 
 public:
+	/* A one-level address can be constructed polymorphically from Numbers or Labels. */
+	this(Number source) {
+		this.data = [Node(source)];
+	}
+	this(Label source) {
+		this.data = [Node(source)];
+	}
+	unittest {
+		import std.stdio;
+		scope(success) write('.');
+		scope(failure) write('F');
+		auto a = new Address(3), b = new Address(Label(4));
+		assert (a.data[0].is_number);
+		assert (!b.data[0].is_number);
+	}
+	
+	/* Addresses may be appended with one another. */
 	override
 	Address opBinary(string s)(const Address that) const
 	if (s == "~") in {
@@ -65,6 +85,10 @@ public:
 		return acc;
 	}
 
+	//TODO dereference
+
+/* == OPTIMIZATIONS == */
+	//used elsewhere for fast dereferencing
 	override nothrow @trusted
 	size_t toHash()
 	in {
@@ -74,6 +98,20 @@ public:
 		size_t acc = 0;
 		foreach(Node x; this.data) acc = acc>>>7 + (acc^x.toHash());
 		return acc;
+	}
+
+	//append a node directly instead of creating an address first
+	override
+	Address opBinary(string s)(Number next)
+	if (s == "~") body {
+		data ~= Node(next);
+		return this;
+	}
+	override
+	Address opBinary(string s)(Label next)
+	if (s == "~") body {
+		data ~= Node(next);
+		return this;
 	}
 
 private:
@@ -88,18 +126,20 @@ private:
 		};
 		U as;
 
+		this(Number source) {
+			this.is_number = true;
+			this.as.number = source;
+		}
+		this(Label source) {
+			this.is_number = false;
+			this.as.label = source;
+		}
+
 		nothrow @trusted
 		size_t toHash() {
 			return cast(size_t) (is_number ?  this.as.number : this.as.label.id);
 		}
 
 	}
-
-	//TODO
-	//how to construct from code?
-
-}
-
-void main(string[] args) {
 
 }

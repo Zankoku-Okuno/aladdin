@@ -45,6 +45,7 @@ alias long Number; //STUB
  */
 struct Label {
 	uint id; //TODO optimize for 32- vs. 64-bit
+	alias id this;
 }
 
 /*
@@ -99,10 +100,20 @@ public:
 		auto a = new Address(358), b = new Address(Label(0));
 		auto c = a ~ b;
 		c.data[1] = Node(2);
-		assert (!b.data[0].is_number && b.data[0].as.label.id == 0);
+		assert (!b.data[0].is_number && b.data[0].as.label == 0);
 	}
 
-	//TODO dereference
+	/* An iterator used during dereferencing. */
+	class Cursor {
+		import aladdin.core.memory : MemoryCell;
+		private uint location;
+		this(uint initial = 0) {
+			this.location = initial;
+		}
+		MemoryCell next(MemoryCell context) {
+			return new MemoryCell(); //STUB
+		}
+	}
 
 /* == OPTIMIZATIONS == */
 	//used elsewhere for fast dereferencing

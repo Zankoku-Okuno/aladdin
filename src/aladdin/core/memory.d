@@ -77,8 +77,8 @@ public:
  * Each cell of memory can store a datum (integer of address).
  * With each memory is associated two sub-memories: an array and a set of labeled memories.
  */
-struct MemoryCell {
+class MemoryCell {
 	Datum datum;
-	MemoryCell*[uint] ordered;
-	MemoryCell*[Label] address;
+	MemoryCell[Number] ordered;
+	MemoryCell[Label] address;
 }

@@ -1,16 +1,27 @@
 
+DC = gdc -Isrc
+DEBUG_FLAGS = -O0 -funittest
+
 # Standard Targets
 
 all: prereqs
 
-check: src/aladdin/core/ontology.d
-	gdc -Isrc -funittest test/dummy.d $^ -o unittest
-	./unittest
+check: bin/unittest
+	bin/unittest
 
 clean:
-	-rm bin/*
-	-rm src/dlfcn.di
-	-rm ./a.out
+	rm -f bin/*
+	rm -f src/dlfcn.di
+
+# Test Objects
+
+bin/unittest: bin/ontology.o bin/memory.o
+	$(DC) $(DEBUG_FLAGS) test/dummy.d $^ -o $@
+
+bin/ontology.o: src/aladdin/core/ontology.d src/aladdin/core/memory.d
+	$(DC) -c $(DEBUG_FLAGS) src/aladdin/core/ontology.d -o $@
+bin/memory.o: src/aladdin/core/memory.d src/aladdin/core/ontology.d
+	$(DC) -c $(DEBUG_FLAGS) src/aladdin/core/memory.d -o $@
 
 # Prerequisites
 

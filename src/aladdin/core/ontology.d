@@ -105,14 +105,39 @@ public:
 
 	/* An iterator used during dereferencing. */
 	class Cursor {
-		import aladdin.core.memory : MemoryCell;
-		private uint location;
+		import aladdin.core.memory : MemoryCell, Datum;
+	private:
+		uint location;
+		MemoryCell next(MemoryCell context) {
+			auto tmp = this.outer.data[location++];
+			return tmp.is_number ? context[tmp.as.number] : context[tmp.as.label];
+		}
+	public:
 		this(uint initial = 0) {
 			this.location = initial;
 		}
-		MemoryCell next(MemoryCell context) {
-			return new MemoryCell(); //STUB
+		Datum get(MemoryCell context) {
+			auto tmp = context;
+			while(location < this.outer.data.length) {
+				if (!tmp) throw new Exception("TODO uninitialized");
+				tmp = this.next(context);
+			}
+			return *tmp;
 		}
+		void set(MemoryCell context, Datum value) {
+			MemoryCell tmp = context, next = null;
+			while (location < this.outer.data.length) {
+				next = this.next(context);
+				if (next) tmp = next;
+				else {
+					raise Exception("Not Implemented");
+					//TODO construct MemoryCells
+				}
+				
+			}
+			tmp = value;
+		}
+		
 	}
 
 /* == OPTIMIZATIONS == */

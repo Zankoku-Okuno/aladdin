@@ -45,7 +45,7 @@ import aladdin.core.ontology;
  * A datum is the fundamental data type of the virtual machine.
  * Data may be either a single arbitrary-precision integer or address.
  */
-struct Datum {
+class Datum {
 private:
 	bool is_number;
 	@property bool is_address() { return !is_number; }
@@ -78,7 +78,28 @@ public:
  * With each memory is associated two sub-memories: an array and a set of labeled memories.
  */
 class MemoryCell {
-	Datum datum;
-	MemoryCell[Number] ordered;
-	MemoryCell[Label] address;
+private:
+	Datum datum = null;
+	MemoryCell[Number] by_number;
+	MemoryCell[Label] by_label;
+public:
+	/* Dereference: get the datum stored here, if initialized. */
+	Datum opUnary(string op)() if (op == "*") {
+		return this.datum;
+	}
+	MemoryCell opAssign(Datum value) {
+		this.datum = value;
+		return this;
+	}
+	/* Polymorphically access submemories by either number or label.
+	 * Returns null if the index is not yet initialized.
+	 */
+	MemoryCell opIndex(Number index) {
+		if (auto it = index in this.by_number) return *it;
+		else return null;
+	}
+	MemoryCell opIndex(Label index) {
+		if (auto it = index in this.by_label) return *it;
+		else return null;
+	}
 }

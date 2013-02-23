@@ -154,12 +154,12 @@ public:
         scope(success) write('.');
         scope(failure) write('F');
         auto root = new MemoryCell();
-        assert(root[AddressNode(Label(8))] is null);
-        root.force(AddressNode(Label(8)));
-        assert(root[AddressNode(Label(8))] !is null);
-        root[AddressNode(Label(8))] = new Datum(new Address(Number(0)));
-        assert((*root[AddressNode(Label(8))]).is_address);
-        assert((*root[AddressNode(Label(8))]).as.address.data[0].as.number == Number(0));
+        assert(root[AddressNode(Label("rabbit-hole"))] is null);
+        root.force(AddressNode(Label("rabbit-hole")));
+        assert(root[AddressNode(Label("rabbit-hole"))] !is null);
+        root[AddressNode(Label("rabbit-hole"))] = new Datum(new Address(Number(0)));
+        assert((*root[AddressNode(Label("rabbit-hole"))]).is_address);
+        assert((*root[AddressNode(Label("rabbit-hole"))]).as.address.data[0].as.number == Number(0));
     }
 }
 
@@ -190,7 +190,7 @@ public:
         import std.stdio;
         scope(success) write('.');
         scope(failure) write('F');
-        auto a = new Address(Number(3)), b = new Address(Label(4));
+        auto a = new Address(Number(3)), b = new Address(Label("does_not_exist"));
         assert (a.data[0].is_number);
         assert (!b.data[0].is_number);
     }
@@ -227,7 +227,7 @@ public:
         scope(success) write('.');
         scope(failure) write('F');
         auto root = new MemoryCell();
-        auto yes = new Address(Number(7)) ~ new Address(Label(1)),
+        auto yes = new Address(Number(921)) ~ new Address(Label("rabbit-hole")),
              no  = new Address(Number(1));
         yes.set(root, new Datum(Number(5)));
         assert(yes.get(root).as.number == Number(5));
@@ -260,10 +260,10 @@ public:
         import std.stdio;
         scope(success) write('.');
         scope(failure) write('F');
-        auto a = new Address(Number(358)), b = new Address(Label(0));
+        auto a = new Address(Number(358)), b = new Address(Label("alabel"));
         auto c = a ~ b;
         c.data[1] = AddressNode(Number(2));
-        assert (!b.data[0].is_number && b.data[0].as.label == 0);
+        assert (!b.data[0].is_number && b.data[0].as.label == Label("alabel"));
     }
     Address opBinary(string s)(Number next)
     if (s == "~") body {

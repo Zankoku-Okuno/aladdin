@@ -108,8 +108,45 @@ struct Number {
  *  Labels are relative to the environment in which they are evaluated and only access one memory level down.
  */
 struct Label {
-    uint id; //TODO optimize for 32- vs. 64-bit
-    alias id this;
+    private size_t id;
+
+    this(string s)
+    out {
+        assert(this.id < human_lookup.length);
+    }
+    body {
+        if (auto it = s in build_lookup)
+            this.id = *it;
+        else {
+            this.id = human_lookup.length;
+            build_lookup[s] = this.id;
+            human_lookup ~= s;
+        }
+    }
+
+    bool opEquals(const ref Label that) const {
+        return this.id == that.id;
+    }
+    hash_t opHash() const {
+        return cast(hash_t) this.id;
+    }
+
+    string toString() const {
+        return human_lookup[this.id];
+    }
+
+private:
+    static ulong[string] build_lookup;
+    static string[] human_lookup;
+
+    invariant() {
+        static size_t len = 0;
+        assert(human_lookup.length >= len);
+        if (human_lookup.length > len) len = human_lookup.length;
+        foreach (string s; human_lookup)
+            assert(s in build_lookup);
+    }
+
 }
 
 

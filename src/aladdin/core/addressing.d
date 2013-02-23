@@ -30,55 +30,24 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* DOC
-
-*/
+/*
+ *  This file prodives three tightly interwoven concepts: Datum, Address and
+ *  MemoryCell.
+ *
+ *  A Datum can be either a Number of an Address.
+ *
+ *  A MemoryCell can contain a single Datum alongside an arbitrary number of
+ *  sub-cells. 
+ *
+ *  An Address allows navigation in the tree of MemoryCells. An address is a
+ *  list of Numbers and Labels (possibly mixed) that recursively digs into the
+ *  tree of MemoryCells. Labeled MemoryCells are never numbered, and vice-versa. 
+ */
 
 module aladdin.core.addressing;
 
-import aladdin.core.ontology : Number, Label, Datum;
+import aladdin.core.ontology : Number, Label;
 
-/*
- * MemoryCells are responsible for tracking all data in the application.
- * Each cell of memory can store a datum (integer of address).
- * With each memory is associated two sub-memories: an array and a set of labeled memories.
- */
-class MemoryCell {
-private:
-    Datum datum = null;
-    MemoryCell[Number] by_number;
-    MemoryCell[Label] by_label;
-public:
-    /* Dereference: get the datum stored here, if initialized. */
-    Datum opUnary(string op)() if (op == "*") {
-        return this.datum;
-    }
-    MemoryCell opAssign(Datum value) {
-        this.datum = value;
-        return this;
-    }
-    /* Polymorphically access submemories by either number or label.
-     * Returns null if the index is not yet initialized.
-     */
-    MemoryCell opIndex(AddressNode index) {
-        if (index.is_number)
-            if (auto it = index.as.number in this.by_number) return *it;
-        else
-            if (auto it = index.as.label in this.by_label) return *it;
-        return null;
-    }
-    /* As opIndex, but create and return a fresh memory cell if the index is not
-    * initialized.
-    */
-    MemoryCell force(AddressNode index) {
-        if (index.is_number)
-            if (auto it = index.as.number in this.by_number) return *it;
-            else return this.by_number[index.as.number] = new MemoryCell();
-        else
-            if (auto it = index.as.label in this.by_label) return *it;
-            else return this.by_label[index.as.label] = new MemoryCell();
-    }
-}
 
 /*
  *  An address is a pointer to a piece of memory.
@@ -118,7 +87,6 @@ public:
 
     /* An iterator used during dereferencing. */
     class Cursor {
-        import aladdin.core.ontology : Datum;
     private:
         uint location;
     public:
@@ -209,3 +177,75 @@ struct AddressNode {
     }
 }
 
+/*
+ * A datum is the fundamental data type of the virtual machine.
+ * Data may be either a single arbitrary-precision integer or address.
+ */
+class Datum {
+private:
+    bool is_number;
+    @property bool is_address() { return !is_number; }
+
+    union U {
+        Number number;
+        Address address;
+    }
+    U as;
+
+public:
+    this(Number value) {
+        this.as.number = value;
+        this.is_number = true;
+    }
+    this(Address value) {
+        this.as.address = value;
+        this.is_number = false;
+    }
+
+    //TODO support all the operations on data in here, including doing the typechecking.
+    //addresses can be concated, dereferenced
+    //numbers can be arithemtic(+-*/%) compare(<>=) logicals(&|^!)?
+    //there are no operations between addresses and numbers
+}
+
+/*
+ * MemoryCells are responsible for tracking all data in the application.
+ * Each cell of memory can store a datum (integer of address).
+ * With each memory is associated two sub-memories: an array and a set of labeled memories.
+ */
+class MemoryCell {
+private:
+    Datum datum = null;
+    MemoryCell[Number] by_number;
+    MemoryCell[Label] by_label;
+public:
+    /* Dereference: get the datum stored here, if initialized. */
+    Datum opUnary(string op)() if (op == "*") {
+        return this.datum;
+    }
+    MemoryCell opAssign(Datum value) {
+        this.datum = value;
+        return this;
+    }
+    /* Polymorphically access submemories by either number or label.
+     * Returns null if the index is not yet initialized.
+     */
+    MemoryCell opIndex(AddressNode index) {
+        if (index.is_number)
+            if (auto it = index.as.number in this.by_number) return *it;
+        else
+            if (auto it = index.as.label in this.by_label) return *it;
+        return null;
+    }
+    /* As opIndex, but create and return a fresh memory cell if the index is not
+    * initialized.
+    */
+    MemoryCell force(AddressNode index) {
+        if (index.is_number)
+            if (auto it = index.as.number in this.by_number) return *it;
+            else return this.by_number[index.as.number] = new MemoryCell();
+        else
+            if (auto it = index.as.label in this.by_label) return *it;
+            else return this.by_label[index.as.label] = new MemoryCell();
+    }
+}

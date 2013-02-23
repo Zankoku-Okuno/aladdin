@@ -18,10 +18,10 @@ clean:
 bin/unittest: bin/ontology.o bin/addressing.o
 	$(DC) $(DEBUG_FLAGS) test/dummy.d $^ -o $@
 
-bin/ontology.o: src/aladdin/core/ontology.d src/aladdin/core/addressing.d
-	$(DC) -c $(DEBUG_FLAGS) src/aladdin/core/ontology.d -o $@
+bin/ontology.o: src/aladdin/core/ontology.d
+	$(DC) -c $(DEBUG_FLAGS) $< -o $@
 bin/addressing.o: src/aladdin/core/addressing.d src/aladdin/core/ontology.d
-	$(DC) -c $(DEBUG_FLAGS) src/aladdin/core/addressing.d -o $@
+	$(DC) -c $(DEBUG_FLAGS) $< -o $@
 
 # Prerequisites
 

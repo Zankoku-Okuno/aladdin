@@ -34,45 +34,11 @@
  *  The ontology class provides the basic units of data storage in the VM.
  *  Specifically, there is the Number, an arbitrary-precision signed integer,
  *  and the Label, a scheme for naming a piece of memory and accessing it
- *  thereby. 
- *
- *  More importatly, this file provides the Datum struct, which provides an
- *  abstraction over the Number and Label types, so that either may be stored in
- *  a piece of memory.
+ *  thereby.
  */
 module aladdin.core.ontology;
 
-/*
- * A datum is the fundamental data type of the virtual machine.
- * Data may be either a single arbitrary-precision integer or address.
- */
-class Datum {
-    import aladdin.core.addressing : Address;
-private:
-    bool is_number;
-    @property bool is_address() { return !is_number; }
 
-    union U {
-        Number number;
-        Address address;
-    }
-    U as;
-
-public:
-    this(Number value) {
-        this.as.number = value;
-        this.is_number = true;
-    }
-    this(Address value) {
-        this.as.address = value;
-        this.is_number = false;
-    }
-
-    //TODO support all the operations on data in here, including doing the typechecking.
-    //addresses can be concated, dereferenced
-    //numbers can be arithemtic(+-*/%) compare(<>=) logicals(&|^!)?
-    //there are no operations between addresses and numbers
-}
 
 /*
  *  A Number is an aribtrary-precision signed integer.

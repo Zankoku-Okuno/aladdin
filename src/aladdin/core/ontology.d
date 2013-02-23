@@ -112,6 +112,11 @@ public:
             auto tmp = this.outer.data[location++];
             return tmp.is_number ? context[tmp.as.number] : context[tmp.as.label];
         }
+        MemoryCell createNext(MemoryCell context) {
+            return new MemoryCell();//STUB
+            //auto tmp = this.outer.data[location++];
+            //return (tmp.is_number ? context[tmp.as.number] : context[tmp.as.label]) = new MemoryCell();
+        }
     public:
         this(uint initial = 0) {
             this.location = initial;
@@ -125,16 +130,13 @@ public:
             return *tmp;
         }
         void set(MemoryCell context, Datum value) {
-            MemoryCell tmp = context, next = null;
-            while (location < this.outer.data.length) {
+            MemoryCell tmp = context;
+            for (MemoryCell next = null; location < this.outer.data.length; ) {
                 next = this.next(context);
                 if (next) tmp = next;
-                else {
-                    raise Exception("Not Implemented");
-                    //TODO construct MemoryCells
-                }
-                
+                else { --location; break; }
             }
+            while (location < this.outer.data.length) tmp = createNext(tmp);
             tmp = value;
         }
         

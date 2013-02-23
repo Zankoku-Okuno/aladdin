@@ -26,8 +26,11 @@ what's perfect-hashable?
 	not addresses, since they can be computed arbitrarily at runtime
 
 what's cacheable?
-	addresses
+	addresses (fast-forward a memory cell lookup)
+	bigints (reduce allocations)
 
 addressing modes:
-	immediate
-	dereference
+	immediate (operand interpreted as Datum)
+	dereference (operand used to rettrieve a Datum)
+	pointer (operand used to retrieve MemoryCell)
+	???offset???

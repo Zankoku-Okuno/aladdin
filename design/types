@@ -1,0 +1,27 @@
+ == Number ==
+An arbitrary-precision signed integer. Logical operations use 2s-complement semantics.
+
+ * Arithmatic Operations -- negate, add, subtract, multiply, divide (w/ remainder) (throws DivideByZero on division by zero)
+ * Relational Operations -- lt, lte, eq, neq, gt, gte
+ * Logical Operations -- invert, and, or, xor
+ * Bitstring Operations -- arithmetic left/right shift, logical left shift, split, concatenate, rotate
+ * TODO: Construct from source code text
+
+ == Address ==
+A string of Numbers and Labels. The user never interacts with labels except to write them into Aladdin source code.
+
+ * Concatenate
+ * Read/write referenced Datum -- throws UninitializedMemory on reading from uninitialized address
+ * TODO: Construct from source code text
+
+ == Datum ==
+A Datum can be either a Number or an Address.
+
+ * TODO: Expose interface to ALU -- type check operands, then delegate to Number or Address for actual computation
+
+ == Memory Cell ==
+Holds exacly one Datum and any number of Members. A Member is simply a memory cell with a fixed address relative to the cell in question. Members may be part of the cell's Array (indexed by Number first) or Block (indexed by Label first).
+
+ * Dereference -- return the Datum held in the cell
+ * Assign -- set the Datum held in the cell
+ * Member -- using an input address, return the Member thereat

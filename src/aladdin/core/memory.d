@@ -47,29 +47,29 @@ import aladdin.core.ontology;
  */
 class Datum {
 private:
-	bool is_number;
-	@property bool is_address() { return !is_number; }
+    bool is_number;
+    @property bool is_address() { return !is_number; }
 
-	union U {
-		Number number;
-		Address address;
-	}
-	U as;
+    union U {
+        Number number;
+        Address address;
+    }
+    U as;
 
 public:
-	this(Number value) {
-		this.as.number = value;
-		this.is_number = true;
-	}
-	this(Address value) {
-		this.as.address = value;
-		this.is_number = false;
-	}
+    this(Number value) {
+        this.as.number = value;
+        this.is_number = true;
+    }
+    this(Address value) {
+        this.as.address = value;
+        this.is_number = false;
+    }
 
-	//TODO support all the operations on data in here, including doing the typechecking.
-	//addresses can be concated, dereferenced
-	//numbers can be arithemtic(+-*/%) compare(<>=) logicals(&|^!)?
-	//there are no operations between addresses and numbers
+    //TODO support all the operations on data in here, including doing the typechecking.
+    //addresses can be concated, dereferenced
+    //numbers can be arithemtic(+-*/%) compare(<>=) logicals(&|^!)?
+    //there are no operations between addresses and numbers
 }
 
 /*
@@ -79,27 +79,27 @@ public:
  */
 class MemoryCell {
 private:
-	Datum datum = null;
-	MemoryCell[Number] by_number;
-	MemoryCell[Label] by_label;
+    Datum datum = null;
+    MemoryCell[Number] by_number;
+    MemoryCell[Label] by_label;
 public:
-	/* Dereference: get the datum stored here, if initialized. */
-	Datum opUnary(string op)() if (op == "*") {
-		return this.datum;
-	}
-	MemoryCell opAssign(Datum value) {
-		this.datum = value;
-		return this;
-	}
-	/* Polymorphically access submemories by either number or label.
-	 * Returns null if the index is not yet initialized.
-	 */
-	MemoryCell opIndex(Number index) {
-		if (auto it = index in this.by_number) return *it;
-		else return null;
-	}
-	MemoryCell opIndex(Label index) {
-		if (auto it = index in this.by_label) return *it;
-		else return null;
-	}
+    /* Dereference: get the datum stored here, if initialized. */
+    Datum opUnary(string op)() if (op == "*") {
+        return this.datum;
+    }
+    MemoryCell opAssign(Datum value) {
+        this.datum = value;
+        return this;
+    }
+    /* Polymorphically access submemories by either number or label.
+     * Returns null if the index is not yet initialized.
+     */
+    MemoryCell opIndex(Number index) {
+        if (auto it = index in this.by_number) return *it;
+        else return null;
+    }
+    MemoryCell opIndex(Label index) {
+        if (auto it = index in this.by_label) return *it;
+        else return null;
+    }
 }

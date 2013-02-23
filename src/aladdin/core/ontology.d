@@ -44,8 +44,8 @@ alias long Number; //STUB
  *  Labels are relative to the environment in which they are evaluated and only access one memory level down.
  */
 struct Label {
-	uint id; //TODO optimize for 32- vs. 64-bit
-	alias id this;
+    uint id; //TODO optimize for 32- vs. 64-bit
+    alias id this;
 }
 
 /*
@@ -55,144 +55,144 @@ struct Label {
  */
 class Address {
 private:
-	Node[] data;
+    Node[] data;
 
 public:
-	/* A one-level address can be constructed polymorphically from Numbers or Labels. */
-	this(Number source) {
-		this.data = [Node(source)];
-	}
-	this(Label source) {
-		this.data = [Node(source)];
-	}
-	unittest {
-		import std.stdio;
-		scope(success) write('.');
-		scope(failure) write('F');
-		auto a = new Address(3), b = new Address(Label(4));
-		assert (a.data[0].is_number);
-		assert (!b.data[0].is_number);
-	}
-	
-	/* Addresses may be appended with one another. */
-	Address opBinary(string s)(const Address that) const
-	if (s == "~")
-	in {
-		assert (data.length > 0);
-	}
-	out (result) {
-		assert (result.data.length == this.data.length + that.data.length);
-		uint i;
-		for(i = 0; i < this.data.length; ++i)
-			assert (result.data[i] == this.data[i]);
-		for( ; i < result.data.length; ++i)
-			assert (result.data[i] == that.data[i-this.data.length]);
-	}
-	body {
-		auto acc = new Address();
-		acc.data = cast(Node[])(this.data ~ that.data); //UNSPIFFY why do I need the cast? a copy of a const should not be const
-		return acc;
-	}
-	unittest {
-		import std.stdio;
-		scope(success) write('.');
-		scope(failure) write('F');
-		auto a = new Address(358), b = new Address(Label(0));
-		auto c = a ~ b;
-		c.data[1] = Node(2);
-		assert (!b.data[0].is_number && b.data[0].as.label == 0);
-	}
+    /* A one-level address can be constructed polymorphically from Numbers or Labels. */
+    this(Number source) {
+        this.data = [Node(source)];
+    }
+    this(Label source) {
+        this.data = [Node(source)];
+    }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        auto a = new Address(3), b = new Address(Label(4));
+        assert (a.data[0].is_number);
+        assert (!b.data[0].is_number);
+    }
+    
+    /* Addresses may be appended with one another. */
+    Address opBinary(string s)(const Address that) const
+    if (s == "~")
+    in {
+        assert (data.length > 0);
+    }
+    out (result) {
+        assert (result.data.length == this.data.length + that.data.length);
+        uint i;
+        for(i = 0; i < this.data.length; ++i)
+            assert (result.data[i] == this.data[i]);
+        for( ; i < result.data.length; ++i)
+            assert (result.data[i] == that.data[i-this.data.length]);
+    }
+    body {
+        auto acc = new Address();
+        acc.data = cast(Node[])(this.data ~ that.data); //UNSPIFFY why do I need the cast? a copy of a const should not be const
+        return acc;
+    }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        auto a = new Address(358), b = new Address(Label(0));
+        auto c = a ~ b;
+        c.data[1] = Node(2);
+        assert (!b.data[0].is_number && b.data[0].as.label == 0);
+    }
 
-	/* An iterator used during dereferencing. */
-	class Cursor {
-		import aladdin.core.memory : MemoryCell, Datum;
-	private:
-		uint location;
-		MemoryCell next(MemoryCell context) {
-			auto tmp = this.outer.data[location++];
-			return tmp.is_number ? context[tmp.as.number] : context[tmp.as.label];
-		}
-	public:
-		this(uint initial = 0) {
-			this.location = initial;
-		}
-		Datum get(MemoryCell context) {
-			auto tmp = context;
-			while(location < this.outer.data.length) {
-				if (!tmp) throw new Exception("TODO uninitialized");
-				tmp = this.next(context);
-			}
-			return *tmp;
-		}
-		void set(MemoryCell context, Datum value) {
-			MemoryCell tmp = context, next = null;
-			while (location < this.outer.data.length) {
-				next = this.next(context);
-				if (next) tmp = next;
-				else {
-					raise Exception("Not Implemented");
-					//TODO construct MemoryCells
-				}
-				
-			}
-			tmp = value;
-		}
-		
-	}
+    /* An iterator used during dereferencing. */
+    class Cursor {
+        import aladdin.core.memory : MemoryCell, Datum;
+    private:
+        uint location;
+        MemoryCell next(MemoryCell context) {
+            auto tmp = this.outer.data[location++];
+            return tmp.is_number ? context[tmp.as.number] : context[tmp.as.label];
+        }
+    public:
+        this(uint initial = 0) {
+            this.location = initial;
+        }
+        Datum get(MemoryCell context) {
+            auto tmp = context;
+            while(location < this.outer.data.length) {
+                if (!tmp) throw new Exception("TODO uninitialized");
+                tmp = this.next(context);
+            }
+            return *tmp;
+        }
+        void set(MemoryCell context, Datum value) {
+            MemoryCell tmp = context, next = null;
+            while (location < this.outer.data.length) {
+                next = this.next(context);
+                if (next) tmp = next;
+                else {
+                    raise Exception("Not Implemented");
+                    //TODO construct MemoryCells
+                }
+                
+            }
+            tmp = value;
+        }
+        
+    }
 
 /* == OPTIMIZATIONS == */
-	//used elsewhere for fast dereferencing
-	override nothrow @trusted
-	size_t toHash()
-	in {
-		assert (data.length > 0);
-	}
-	body{
-		size_t acc = 0;
-		foreach(Node x; this.data) acc = acc>>>7 + (acc^x.toHash());
-		return acc;
-	}
+    //used elsewhere for fast dereferencing
+    override nothrow @trusted
+    size_t toHash()
+    in {
+        assert (data.length > 0);
+    }
+    body{
+        size_t acc = 0;
+        foreach(Node x; this.data) acc = acc>>>7 + (acc^x.toHash());
+        return acc;
+    }
 
-	//REFAC to a AddressBuilder subclass, add a factory to create addresses from AddressBuilders
-	//append a node directly instead of creating an address first
-	Address opBinary(string s)(Number next)
-	if (s == "~") body {
-		data ~= Node(next);
-		return this;
-	}
-	Address opBinary(string s)(Label next)
-	if (s == "~") body {
-		data ~= Node(next);
-		return this;
-	}
+    //REFAC to a AddressBuilder subclass, add a factory to create addresses from AddressBuilders
+    //append a node directly instead of creating an address first
+    Address opBinary(string s)(Number next)
+    if (s == "~") body {
+        data ~= Node(next);
+        return this;
+    }
+    Address opBinary(string s)(Label next)
+    if (s == "~") body {
+        data ~= Node(next);
+        return this;
+    }
 
 private:
-	this() {}
+    this() {}
 
-	/* Abstraction over labels/offsets as elements of a full address. */
-	struct Node {
-		bool is_number;
-		@property is_label() { return !this.is_number; }
-		union U {
-			Number number;
-			Label label;
-		};
-		U as;
+    /* Abstraction over labels/offsets as elements of a full address. */
+    struct Node {
+        bool is_number;
+        @property is_label() { return !this.is_number; }
+        union U {
+            Number number;
+            Label label;
+        };
+        U as;
 
-		this(Number source) {
-			this.is_number = true;
-			this.as.number = source;
-		}
-		this(Label source) {
-			this.is_number = false;
-			this.as.label = source;
-		}
+        this(Number source) {
+            this.is_number = true;
+            this.as.number = source;
+        }
+        this(Label source) {
+            this.is_number = false;
+            this.as.label = source;
+        }
 
-		nothrow @trusted
-		size_t toHash() {
-			return cast(size_t) (is_number ?  this.as.number : this.as.label.id);
-		}
+        nothrow @trusted
+        size_t toHash() {
+            return cast(size_t) (is_number ?  this.as.number : this.as.label.id);
+        }
 
-	}
+    }
 
 }

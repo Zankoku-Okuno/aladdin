@@ -90,76 +90,67 @@ private:
     MemoryCell[Number] by_number;
     MemoryCell[Label] by_label;
 public:
-    /* Dereference: get the datum stored here, if initialized. */
-    Datum opUnary(string op)() if (op == "*") {
+    /* Dereference: get the datum stored here, if initialized; or set the value if one is given. */
+    Datum deref() {
+        //if (this.datum is null) //TODO
+        //    throw new UninitializedMemory(null, 0);
         return this.datum;
     }
-    MemoryCell opAssign(Datum value) {
+    void assign(Datum value) {
         this.datum = value;
-        return this;
     }
     unittest {
         import std.stdio;
         scope(success) write('.');
         scope(failure) write('F');
         auto root = new MemoryCell();
-        assert(*root is null);
-        root = new Datum(Number(3)); //FIXME I shouildn't need to wrap this crap
-        assert ((*root).is_number && (*root).as.number == Number(3));
+        assert(root.deref() is null);
+        root.assign(new Datum(Number(3))); //FIXME I shouildn't need to wrap this crap
+        assert ((root.deref()).is_number && (root.deref()).as.number == Number(3));
     }
 
-    /* Polymorphically access submemories by either number or label.
-     * Returns null if the index is not yet initialized.
-     */
-    MemoryCell opIndex(AddressNode index) {
-        if (index.is_number) {
-            if (auto it = index.as.number in this.by_number) return *it;
+    MemoryCell member(Address address, uint location = 0) {
+        MemoryCell* tmp = &this;
+        foreach (AddressNode index; address.data[location..$]) {
+            if (index.is_number) tmp = index.as.number in (*tmp).by_number;
+            else                 tmp = index.as.label  in (*tmp).by_label;
+            if (tmp is null) throw new UninitializedMemory(address, location-1);
         }
-        else {
-            if (auto it = index.as.label in this.by_label) return *it;
-        }
-        return null;
+        return *tmp;
     }
-    /* As opIndex, but create and return a fresh memory cell if the index is not
-    * initialized.
-    */
-    MemoryCell force(AddressNode index)
-    out (result) {
-        assert(this[index] !is null);
-    }
-    body {
-        if (index.is_number) {
-            if (auto it = index.as.number in this.by_number) return *it;
-            else return this.by_number[index.as.number] = new MemoryCell();
+    MemoryCell force_member(Address address, uint location = 0) {
+        MemoryCell tmp = this;
+        foreach (AddressNode index; address.data[location..$]) {
+            if (index.is_number) {
+                if (index.as.number !in tmp.by_number)
+                    tmp.by_number[index.as.number] = new MemoryCell();
+                tmp = tmp.by_number[index.as.number];
+            }
+            else {
+                if (index.as.label !in tmp.by_label)
+                    tmp.by_label[index.as.label] = new MemoryCell();
+                tmp = tmp.by_label[index.as.label];
+            }   
         }
-        else {
-            if (auto it = index.as.label in this.by_label) return *it;
-            else return this.by_label[index.as.label] = new MemoryCell();
-        }
+        return tmp;
     }
     unittest {
         import std.stdio;
         scope(success) write('.');
         scope(failure) write('F');
         auto root = new MemoryCell();
-        assert(root[AddressNode(Number(3))] is null);
-        root.force(AddressNode(Number(3)));
-        assert(root[AddressNode(Number(3))] !is null);
-        root[AddressNode(Number(3))] = new Datum(Number(9));
-        assert((*root[AddressNode(Number(3))]).is_number);
-        assert((*root[AddressNode(Number(3))]).as.number == Number(9));
-    }
-    unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        auto root = new MemoryCell();
-        assert(root[AddressNode(Label("rabbit-hole"))] is null);
-        root.force(AddressNode(Label("rabbit-hole")));
-        assert(root[AddressNode(Label("rabbit-hole"))] !is null);
-        root[AddressNode(Label("rabbit-hole"))] = new Datum(new Address(Number(0)));
-        assert((*root[AddressNode(Label("rabbit-hole"))]).is_address);
-        assert((*root[AddressNode(Label("rabbit-hole"))]).as.address.data[0].as.number == Number(0));
+        auto yes = new Address(Number(921)) ~ new Address(Label("rabbit-hole")),
+             no1  = new Address(Number(1)),
+             no2  = new Address(Label("not me"));
+        try { root.member(yes); assert(false); } catch (UninitializedMemory ex) { assert(true); }
+        root.force_member(yes).assign(new Datum(Number(5)));
+        assert(root.member(new Address(Number(921)))
+                   .member(new Address(Label("rabbit-hole")))
+                   .deref().as.number == Number(5));
+        assert(root.member(yes).deref().as.number == Number(5));
+        try { root.member(no1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
+        try { root.member(no2); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
+        try { root.member(yes, 1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
     }
 }
 
@@ -196,43 +187,6 @@ public:
     }
 
     private this() {}
-    
-    /* ==================================== Accessors ==================================== */
-    
-    Datum get(MemoryCell context, uint location = 0)
-    in {
-        assert(context !is null);
-    }
-    body {
-        auto tmp = context;
-        while(location < this.data.length) {
-            tmp = context[this.data[location++]];
-            if (tmp is null) throw new UninitializedMemory(this, location-1);
-        }
-        return *tmp;
-    }
-    void set(MemoryCell context, Datum value, uint location = 0)
-    in {
-        assert(context !is null);
-    }
-    body {
-        MemoryCell tmp = context;
-        while (location < this.data.length) {
-            tmp = context.force(this.data[location++]);
-        }
-        tmp = value;
-    }
-    unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        auto root = new MemoryCell();
-        auto yes = new Address(Number(921)) ~ new Address(Label("rabbit-hole")),
-             no  = new Address(Number(1));
-        yes.set(root, new Datum(Number(5)));
-        assert(yes.get(root).as.number == Number(5));
-        try { no.get(root); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
-    }
 
     /* ==================================== Operators ==================================== */
 
@@ -275,17 +229,14 @@ public:
         data ~= Node(next);
         return this;
     }
+}
 
-    /* ==================================== Exception ==================================== */
-
-    static class UninitializedMemory : Exception { //TODO have an AladdinException?
-        this(Address address, uint location,
-             string file = __FILE__, ulong line = cast(ulong)__LINE__,
-             Throwable next = cast(Throwable)null) {
-            super("TODO", file, line, next);
-        }
+class UninitializedMemory : Exception { //TODO have an AladdinException?
+    this(Address address, uint location,
+         string file = __FILE__, ulong line = cast(ulong)__LINE__,
+         Throwable next = cast(Throwable)null) {
+        super("TODO", file, line, next);
     }
-
 }
 
 private:

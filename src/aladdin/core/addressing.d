@@ -73,7 +73,7 @@ public:
         this.is_number = false;
     }
 
-    //TODO support all the operations on data in here, including doing the typechecking.
+    //TODO support all the operations on data (ALU) in here, including doing the typechecking.
     //addresses can be concated, dereferenced
     //numbers can be arithemtic(+-*/%) compare(<>=) logicals(&|^!)?
     //there are no operations between addresses and numbers
@@ -105,7 +105,7 @@ public:
         auto root = new MemoryCell();
         assert(*root is null);
         root = new Datum(Number(3)); //FIXME I shouildn't need to wrap this crap
-        assert ((*root).is_number && (*root).as.number == 3);
+        assert ((*root).is_number && (*root).as.number == Number(3));
     }
 
     /* Polymorphically access submemories by either number or label.
@@ -147,7 +147,7 @@ public:
         assert(root[AddressNode(Number(3))] !is null);
         root[AddressNode(Number(3))] = new Datum(Number(9));
         assert((*root[AddressNode(Number(3))]).is_number);
-        assert((*root[AddressNode(Number(3))]).as.number == 9);
+        assert((*root[AddressNode(Number(3))]).as.number == Number(9));
     }
     unittest {
         import std.stdio;
@@ -159,7 +159,7 @@ public:
         assert(root[AddressNode(Label(8))] !is null);
         root[AddressNode(Label(8))] = new Datum(new Address(Number(0)));
         assert((*root[AddressNode(Label(8))]).is_address);
-        assert((*root[AddressNode(Label(8))]).as.address.data[0].as.number == 0);
+        assert((*root[AddressNode(Label(8))]).as.address.data[0].as.number == Number(0));
     }
 }
 
@@ -230,7 +230,7 @@ public:
         auto yes = new Address(Number(7)) ~ new Address(Label(1)),
              no  = new Address(Number(1));
         yes.set(root, new Datum(Number(5)));
-        assert(yes.get(root).as.number == 5);
+        assert(yes.get(root).as.number == Number(5));
         try { no.get(root); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
     }
 

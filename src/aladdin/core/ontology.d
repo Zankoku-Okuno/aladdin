@@ -41,12 +41,66 @@ module aladdin.core.ontology;
 
 
 /*
- *  A Number is an aribtrary-precision signed integer.
+ *  A Number is an aribtrary-precision signed integer with 2s-complement semantics for logical operations.
  *  Publicly, Aladdin supports only this kind of number to maintatin architecture-independence.
  */
-struct Number { //STUB
+struct Number {
     long value;
-    alias value this;
+    void* big = null;
+    
+    this(long i) {
+        this.value = i;
+    }
+    this(string s) {
+        import std.conv;
+        try {
+            this.value = parse!long(s);
+        }
+        catch (ConvOverflowException ex) {
+            throw new Exception("TODO not implemented"); //STUB
+        }
+    }
+
+
+    Number opBinary(string op)(const ref Number value) const {
+        if (!big)
+            return mixin("this.value "~op~" that.value");
+        else
+            throw new Exception("TODO not implemented"); //STUB
+    }
+
+    /*
+    TODO if bigint is null:
+        perform arithmatic on the value as normal, 
+        but when done, check if the value is > 32 bits
+            in which case, there's been an overflow, and we switch to bigint representation
+    TODO if using bigint
+        value actually stores flags (which may simply be a sign bit)
+        logical operations act as if 2s-complement (could be annoying to implement)
+        I'm thinking: use a dynamic array of longs
+    */
+
+    hash_t opHash() const {
+        if (!big)
+            return cast(hash_t) value;
+        else
+            throw new Exception("TODO not implemented"); //STUB
+    }
+    bool opEquals(const ref Number that) const {
+        if (!big)
+            return this.value == that.value;
+        else
+            throw new Exception("TODO not implemented"); //STUB
+
+    }
+    int opCmp(const ref Number that) const {
+        if (!big)
+            return cast(int)(this.value - that.value);
+        else
+            throw new Exception("TODO not implemented"); //STUB
+
+    }
+
 }
 
 /*

@@ -172,7 +172,7 @@ public:
 class Address {
 private:
 
-    /* ==================================== Fields ==================================== */
+    /* ==================================== Field ==================================== */
 
     AddressNode[] data;
 
@@ -199,13 +199,16 @@ public:
     
     /* ==================================== Accessors ==================================== */
     
-    Datum get(MemoryCell context, uint location = 0) {
+    Datum get(MemoryCell context, uint location = 0)
+    in {
+        assert(context !is null);
+    }
+    body {
         auto tmp = context;
         while(location < this.data.length) {
-            if (tmp is null) throw new Exception("TODO uninitialized");
             tmp = context[this.data[location++]];
+            if (tmp is null) throw new UninitializedMemory(this, location-1);
         }
-        if (tmp is null) throw new Exception("TODO uninitialized");
         return *tmp;
     }
     void set(MemoryCell context, Datum value, uint location = 0)
@@ -228,7 +231,7 @@ public:
              no  = new Address(Number(1));
         yes.set(root, new Datum(Number(5)));
         assert(yes.get(root).as.number == 5);
-        try { no.get(root); assert(false); } catch (Exception ex) { assert(true); } //STUB
+        try { no.get(root); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
     }
 
     /* ==================================== Operators ==================================== */
@@ -272,8 +275,18 @@ public:
         data ~= Node(next);
         return this;
     }
-}
 
+    /* ==================================== Exception ==================================== */
+
+    static class UninitializedMemory : Exception { //TODO have an AladdinException?
+        this(Address address, uint location,
+             string file = __FILE__, ulong line = cast(ulong)__LINE__,
+             Throwable next = cast(Throwable)null) {
+            super("TODO", file, line, next);
+        }
+    }
+
+}
 
 private:
 /* Abstraction over labels/offsets as elements of a full address. */

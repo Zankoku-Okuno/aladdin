@@ -61,10 +61,11 @@ struct Number {
         }
     }
 
+    //TODO enumerate operations that can be perfromed by the "ALU" on numbers
 
     Number opBinary(string op)(const ref Number value) const {
         if (!big)
-            return mixin("this.value "~op~" that.value");
+            return Number(mixin("this.value "~op~" that.value"));
         else
             throw new Exception("TODO not implemented"); //STUB
     }
@@ -100,6 +101,21 @@ struct Number {
             throw new Exception("TODO not implemented"); //STUB
 
     }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        assert(Number(5) == Number(5));
+        assert(Number(5) == Number("5"));
+        assert(Number(5) != Number(7));
+        assert(Number(5).opHash() == Number(5).opHash());
+        assert(Number(5).opHash() == Number("5").opHash());
+        assert(Number(5) <= Number(5));
+        assert(Number(5) < Number(6));
+        assert(Number(5) >= Number(5));
+        assert(Number(5) > Number(4));
+        //TODO bigints
+    }
 
 }
 
@@ -130,9 +146,23 @@ struct Label {
     hash_t opHash() const {
         return cast(hash_t) this.id;
     }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        assert(Label("yes") == Label("yes"));
+        assert(Label("yes") != Label("no"));
+        assert(Label("yes").opHash() == Label("yes").opHash());
+    }
 
     string toString() const {
         return human_lookup[this.id];
+    }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        assert(Label("Goodbyte, cruel world!").toString() == "Goodbyte, cruel world!");
     }
 
 private:

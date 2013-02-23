@@ -23,10 +23,10 @@
  *  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
  *  EVENT SHALL OKUNO ZANKOKU BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
  *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- *  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;LOSS OF USE, DATA, OR PROFITS;
- *  OR BUSINESS INTERRUPTION) HOWEVER CAUSED ANDON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT(INCLUDING NEGLIGENCE OR
- *  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OFTHIS SOFTWARE, EVEN IF
+ *  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ *  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ *  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -47,135 +47,6 @@
 module aladdin.core.addressing;
 
 import aladdin.core.ontology : Number, Label;
-
-
-/*
- *  An address is a pointer to a piece of memory.
- *  They may be relative (such as during concatenation), but are always absolute
- *  when dereferenced.
- *  There are no zero-length addresses.
- */
-class Address {
-private:
-
-    /* ==================================== Fields ==================================== */
-
-    AddressNode[] data;
-
-    /* ==================================== Constructors ==================================== */
-
-public:
-    /* A one-level address can be constructed polymorphically from Numbers or Labels. */
-    this(Number source) {
-        this.data = [AddressNode(source)];
-    }
-    this(Label source) {
-        this.data = [AddressNode(source)];
-    }
-    unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        auto a = new Address(3), b = new Address(Label(4));
-        assert (a.data[0].is_number);
-        assert (!b.data[0].is_number);
-    }
-
-    private this() {}
-    
-    /* ==================================== Accessors ==================================== */
-
-    /* An iterator used during dereferencing. */
-    class Cursor {
-    private:
-        uint location;
-    public:
-        this(uint initial = 0) {
-            this.location = initial;
-        }
-
-        Datum get(MemoryCell context) {
-            auto tmp = context;
-            while(location < this.outer.data.length) {
-                if (!tmp) throw new Exception("TODO uninitialized");
-                tmp = context[this.outer.data[location++]];
-            }
-            return *tmp;
-        }
-        void set(MemoryCell context, Datum value) {
-            MemoryCell tmp = context;
-            while (location < this.outer.data.length) {
-                tmp = context.force(this.outer.data[location++]);
-            }
-            tmp = value;
-        }
-        
-    }
-
-    /* ==================================== Operators ==================================== */
-
-    /* Addresses may be appended with one another. */
-    Address opBinary(string s)(const Address that) const
-    if (s == "~")
-    in {
-        assert (data.length > 0);
-    }
-    out (result) {
-        assert (result.data.length == this.data.length + that.data.length);
-        uint i;
-        for(i = 0; i < this.data.length; ++i)
-            assert (result.data[i] == this.data[i]);
-        for( ; i < result.data.length; ++i)
-            assert (result.data[i] == that.data[i-this.data.length]);
-    }
-    body {
-        auto acc = new Address();
-        //UNSPIFFY why do I need the cast? a copy of a const should not be const
-        acc.data = cast(AddressNode[])(this.data ~ that.data); 
-        return acc;
-    }
-    unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        auto a = new Address(358), b = new Address(Label(0));
-        auto c = a ~ b;
-        c.data[1] = AddressNode(2);
-        assert (!b.data[0].is_number && b.data[0].as.label == 0);
-    }
-    Address opBinary(string s)(Number next)
-    if (s == "~") body {
-        data ~= Node(next);
-        return this;
-    }
-    Address opBinary(string s)(Label next)
-    if (s == "~") body {
-        data ~= Node(next);
-        return this;
-    }
-}
-
-
-private:
-/* Abstraction over labels/offsets as elements of a full address. */
-struct AddressNode {
-    bool is_number;
-    @property is_label() { return !this.is_number; }
-    union U {
-        Number number;
-        Label label;
-    };
-    U as;
-
-    this(Number source) {
-        this.is_number = true;
-        this.as.number = source;
-    }
-    this(Label source) {
-        this.is_number = false;
-        this.as.label = source;
-    }
-}
 
 /*
  * A datum is the fundamental data type of the virtual machine.
@@ -227,25 +98,201 @@ public:
         this.datum = value;
         return this;
     }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        auto root = new MemoryCell();
+        assert(*root is null);
+        root = new Datum(Number(3)); //FIXME I shouildn't need to wrap this crap
+        assert ((*root).is_number && (*root).as.number == 3);
+    }
+
     /* Polymorphically access submemories by either number or label.
      * Returns null if the index is not yet initialized.
      */
     MemoryCell opIndex(AddressNode index) {
-        if (index.is_number)
+        if (index.is_number) {
             if (auto it = index.as.number in this.by_number) return *it;
-        else
+        }
+        else {
             if (auto it = index.as.label in this.by_label) return *it;
+        }
         return null;
     }
     /* As opIndex, but create and return a fresh memory cell if the index is not
     * initialized.
     */
-    MemoryCell force(AddressNode index) {
-        if (index.is_number)
+    MemoryCell force(AddressNode index)
+    out (result) {
+        assert(this[index] !is null);
+    }
+    body {
+        if (index.is_number) {
             if (auto it = index.as.number in this.by_number) return *it;
             else return this.by_number[index.as.number] = new MemoryCell();
-        else
+        }
+        else {
             if (auto it = index.as.label in this.by_label) return *it;
             else return this.by_label[index.as.label] = new MemoryCell();
+        }
+    }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        auto root = new MemoryCell();
+        assert(root[AddressNode(Number(3))] is null);
+        root.force(AddressNode(Number(3)));
+        assert(root[AddressNode(Number(3))] !is null);
+        root[AddressNode(Number(3))] = new Datum(Number(9));
+        assert((*root[AddressNode(Number(3))]).is_number);
+        assert((*root[AddressNode(Number(3))]).as.number == 9);
+    }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        auto root = new MemoryCell();
+        assert(root[AddressNode(Label(8))] is null);
+        root.force(AddressNode(Label(8)));
+        assert(root[AddressNode(Label(8))] !is null);
+        root[AddressNode(Label(8))] = new Datum(new Address(Number(0)));
+        assert((*root[AddressNode(Label(8))]).is_address);
+        assert((*root[AddressNode(Label(8))]).as.address.data[0].as.number == 0);
     }
 }
+
+/*
+ *  An address is a pointer to a piece of memory.
+ *  They may be relative (such as during concatenation), but are always absolute
+ *  when dereferenced.
+ *  There are no zero-length addresses.
+ */
+class Address {
+private:
+
+    /* ==================================== Fields ==================================== */
+
+    AddressNode[] data;
+
+    /* ==================================== Constructors ==================================== */
+
+public:
+    /* A one-level address can be constructed polymorphically from Numbers or Labels. */
+    this(Number source) {
+        this.data = [AddressNode(source)];
+    }
+    this(Label source) {
+        this.data = [AddressNode(source)];
+    }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        auto a = new Address(Number(3)), b = new Address(Label(4));
+        assert (a.data[0].is_number);
+        assert (!b.data[0].is_number);
+    }
+
+    private this() {}
+    
+    /* ==================================== Accessors ==================================== */
+    
+    Datum get(MemoryCell context, uint location = 0) {
+        auto tmp = context;
+        while(location < this.data.length) {
+            if (tmp is null) throw new Exception("TODO uninitialized");
+            tmp = context[this.data[location++]];
+        }
+        if (tmp is null) throw new Exception("TODO uninitialized");
+        return *tmp;
+    }
+    void set(MemoryCell context, Datum value, uint location = 0)
+    in {
+        assert(context !is null);
+    }
+    body {
+        MemoryCell tmp = context;
+        while (location < this.data.length) {
+            tmp = context.force(this.data[location++]);
+        }
+        tmp = value;
+    }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        auto root = new MemoryCell();
+        auto yes = new Address(Number(7)) ~ new Address(Label(1)),
+             no  = new Address(Number(1));
+        yes.set(root, new Datum(Number(5)));
+        assert(yes.get(root).as.number == 5);
+        try { no.get(root); assert(false); } catch (Exception ex) { assert(true); } //STUB
+    }
+
+    /* ==================================== Operators ==================================== */
+
+    /* Addresses may be appended with one another. */
+    Address opBinary(string s)(const Address that) const
+    if (s == "~")
+    in {
+        assert (data.length > 0);
+    }
+    out (result) {
+        assert (result.data.length == this.data.length + that.data.length);
+        uint i;
+        for(i = 0; i < this.data.length; ++i)
+            assert (result.data[i] == this.data[i]);
+        for( ; i < result.data.length; ++i)
+            assert (result.data[i] == that.data[i-this.data.length]);
+    }
+    body {
+        auto acc = new Address();
+        //UNSPIFFY why do I need the cast? a copy of a const should not be const
+        acc.data = cast(AddressNode[])(this.data ~ that.data); 
+        return acc;
+    }
+    unittest {
+        import std.stdio;
+        scope(success) write('.');
+        scope(failure) write('F');
+        auto a = new Address(Number(358)), b = new Address(Label(0));
+        auto c = a ~ b;
+        c.data[1] = AddressNode(Number(2));
+        assert (!b.data[0].is_number && b.data[0].as.label == 0);
+    }
+    Address opBinary(string s)(Number next)
+    if (s == "~") body {
+        data ~= Node(next);
+        return this;
+    }
+    Address opBinary(string s)(Label next)
+    if (s == "~") body {
+        data ~= Node(next);
+        return this;
+    }
+}
+
+
+private:
+/* Abstraction over labels/offsets as elements of a full address. */
+struct AddressNode {
+    bool is_number;
+    @property is_label() { return !this.is_number; }
+    union U {
+        Number number;
+        Label label;
+    };
+    U as;
+
+    this(Number source) {
+        this.is_number = true;
+        this.as.number = source;
+    }
+    this(Label source) {
+        this.is_number = false;
+        this.as.label = source;
+    }
+}
+

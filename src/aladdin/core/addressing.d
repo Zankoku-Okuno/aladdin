@@ -105,7 +105,7 @@ public:
         import test.framework;
         run_test({
             auto root = new MemoryCell();
-            try { root.deref(); assert(false); } catch (UninitializedMemory ex) { assert(true); }
+            assert(does_throw!UninitializedMemory(root.deref()));
             root.assign(new Datum(Number(3))); //FIXME I shouildn't need to wrap this crap
             assert ((root.deref()).is_number && (root.deref()).as.number == Number(3));
         });
@@ -143,15 +143,15 @@ public:
             auto yes = new Address(Number(921)) ~ new Address(Label("rabbit-hole")),
                  no1  = new Address(Number(1)),
                  no2  = new Address(Label("not me"));
-            try { root.member(yes); assert(false); } catch (UninitializedMemory ex) { assert(true); }
+            assert(does_throw!UninitializedMemory(root.member(yes)));
             root.force_member(yes).assign(new Datum(Number(5)));
             assert(root.member(new Address(Number(921)))
                        .member(new Address(Label("rabbit-hole")))
                        .deref().as.number == Number(5));
             assert(root.member(yes).deref().as.number == Number(5));
-            try { root.member(no1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
-            try { root.member(no2); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
-            try { root.member(yes, 1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
+            assert(does_throw!UninitializedMemory(root.member(no1)));
+            assert(does_throw!UninitializedMemory(root.member(no2)));
+            assert(does_throw!UninitializedMemory(root.member(yes, 1)));
         });
     }
 

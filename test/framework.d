@@ -16,6 +16,12 @@ void run_test(void delegate() block) {
     queued_tests ~= block;
 }
 
+bool does_throw(T : Exception)(lazy void expr) {
+    try expr();
+    catch (T ex) return true;
+    return false;
+}
+
 void report() {
     run_impl();
     writefln("========================================================================================");

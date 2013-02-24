@@ -1,5 +1,5 @@
 /*
- *  loader.d
+ *  execution.d
  *  This file is part of the Aladdin virtual machine.
  *  Copyright (c) 2013, Okuno Zankoku
  *  All rights reserved. 
@@ -30,43 +30,28 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* DOC */
+/*
+ * This module contains data structures for representing and storing Aladdin
+ * assembly within the virtual machine. It provides the Operation and
+ * Instruction data types, as well as TextMemory, which is used to store
+ * Instructions and reference them by Address.
+ */
 
-//TODO three things are really going on:
-//      load extensions
-//      loading aladdin assembly code (parse/verify, store in TextMemory)
-//      linking aladdin assemblies (simply joining TextMemories togeter)
-// let's analyze the life cycles of the data structures needed here
+module aladdin.core.execution;
 
-//TODO consider what happens when two assembly files define the same name
-//      I say, this should be detected and treated as error. this way, addresses in one assembly can reference external assemblies
-
-module aladdin.core.loader;
-
-import aladdin.core.code : Operation;
+import aladdin.core.addressing : Datum, Address;
 
 
-struct SyntaxValidator {
-    size_t lower_bound;
-    size_t upper_bound;
+alias Operation void function(Datum[]);
+
+struct Instruction { //STUB
+    Operation operation;
+    Datum[] operands;
 }
 
-Operation[string] opcodes;
-OperationInfo[Operation] reverse_lookup;
+class TextMemory { //STUB
+    Instruction[] text;
 
-
-struct OperationInfo {
-    string opname;
-    Operation opcode;
-    SyntaxValidator validator;
-    //TODO track what library it was loaded from
-}
-
-
-private struct Registry {
-    //TODO load extensions
-    //TODO load/return opcodes on request by name
-    //TODO track OperationInfos
-    //TODO track what extensions have been loaded from
-    //TODO unload unused extensions
+    size_t[Address] jump_targets;
+    //TODO figure out if we can perfect-hash this stuff, but I think the fact that addresses go through a plugin before coming back make it impossible
 }

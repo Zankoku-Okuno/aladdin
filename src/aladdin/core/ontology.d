@@ -102,22 +102,27 @@ struct Number {
 
     }
     unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        assert(Number(5) == Number(5));
-        assert(Number(5) == Number("5"));
-        assert(Number(5) != Number(7));
-        assert(Number(5).opHash() == Number(5).opHash());
-        assert(Number(5).opHash() == Number("5").opHash());
-        assert(Number(5) <= Number(5));
-        assert(Number(5) < Number(6));
-        assert(Number(5) >= Number(5));
-        assert(Number(5) > Number(4));
+        import test.framework;
+        run_test({
+            assert(Number(5) == Number(5));
+            assert(Number(5) == Number("5"));
+            assert(Number(5) != Number(7));
+            assert(Number(5).opHash() == Number(5).opHash());
+            assert(Number(5).opHash() == Number("5").opHash());
+        });
+        run_test({
+            assert(Number(5) <= Number(5));
+            assert(Number(5) < Number(6));
+            assert(Number(5) >= Number(5));
+            assert(Number(5) > Number(4));
+        });
         //TODO bigints
     }
 
 }
+
+
+
 
 /*
  *  A label points to a named (i.e. labelled) piece of memory.
@@ -147,22 +152,22 @@ struct Label {
         return cast(hash_t) this.id;
     }
     unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        assert(Label("yes") == Label("yes"));
-        assert(Label("yes") != Label("no"));
-        assert(Label("yes").opHash() == Label("yes").opHash());
+        import test.framework;
+        run_test({
+            assert(Label("yes") == Label("yes"));
+            assert(Label("yes") != Label("no"));
+            assert(Label("yes").opHash() == Label("yes").opHash());
+        });
     }
 
     string toString() const {
         return human_lookup[this.id];
     }
     unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        assert(Label("Goodbyte, cruel world!").toString() == "Goodbyte, cruel world!");
+        import test.framework;
+        run_test({
+            assert(Label("Goodbyte, cruel world!").toString() == "Goodbyte, cruel world!");
+        });
     }
 
 private:

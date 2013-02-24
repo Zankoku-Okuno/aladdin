@@ -32,8 +32,8 @@ src/dlfcn.di: bin/config-dlfcn
 
 # Executables
 
-bin/unittest: bin/debug/ontology.o bin/debug/addressing.o
-	$(DC) $(DEBUG_FLAGS) test/dummy.d $^ -o $@
+bin/unittest: bin/debug/ontology.o bin/debug/addressing.o test/framework.d
+	$(DC) $(DEBUG_FLAGS) $^ -o $@
 
 bin/config-dlfcn: lib/config-dlfcn.c
 	$(CC) $(C_FLAGS) $^ -o $@

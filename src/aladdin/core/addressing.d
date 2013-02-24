@@ -92,21 +92,21 @@ private:
 public:
     /* Dereference: get the datum stored here, if initialized; or set the value if one is given. */
     Datum deref() {
-        //if (this.datum is null) //TODO
-        //    throw new UninitializedMemory(null, 0);
+        if (this.datum is null)
+            throw new UninitializedMemory(__FILE__, __LINE__);
         return this.datum;
     }
     void assign(Datum value) {
         this.datum = value;
     }
     unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        auto root = new MemoryCell();
-        assert(root.deref() is null);
-        root.assign(new Datum(Number(3))); //FIXME I shouildn't need to wrap this crap
-        assert ((root.deref()).is_number && (root.deref()).as.number == Number(3));
+        import test.framework;
+        run_test({
+            auto root = new MemoryCell();
+            try { root.deref(); assert(false); } catch (UninitializedMemory ex) { assert(true); }
+            root.assign(new Datum(Number(3))); //FIXME I shouildn't need to wrap this crap
+            assert ((root.deref()).is_number && (root.deref()).as.number == Number(3));
+        });
     }
 
     MemoryCell member(Address address, uint location = 0) {
@@ -114,7 +114,7 @@ public:
         foreach (AddressNode index; address.data[location..$]) {
             if (index.is_number) tmp = index.as.number in (*tmp).by_number;
             else                 tmp = index.as.label  in (*tmp).by_label;
-            if (tmp is null) throw new UninitializedMemory(address, location-1);
+            if (tmp is null) throw new UninitializedMemory(__FILE__, __LINE__);
         }
         return *tmp;
     }
@@ -135,22 +135,22 @@ public:
         return tmp;
     }
     unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        auto root = new MemoryCell();
-        auto yes = new Address(Number(921)) ~ new Address(Label("rabbit-hole")),
-             no1  = new Address(Number(1)),
-             no2  = new Address(Label("not me"));
-        try { root.member(yes); assert(false); } catch (UninitializedMemory ex) { assert(true); }
-        root.force_member(yes).assign(new Datum(Number(5)));
-        assert(root.member(new Address(Number(921)))
-                   .member(new Address(Label("rabbit-hole")))
-                   .deref().as.number == Number(5));
-        assert(root.member(yes).deref().as.number == Number(5));
-        try { root.member(no1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
-        try { root.member(no2); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
-        try { root.member(yes, 1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
+        import test.framework;
+        run_test({
+            auto root = new MemoryCell();
+            auto yes = new Address(Number(921)) ~ new Address(Label("rabbit-hole")),
+                 no1  = new Address(Number(1)),
+                 no2  = new Address(Label("not me"));
+            try { root.member(yes); assert(false); } catch (UninitializedMemory ex) { assert(true); }
+            root.force_member(yes).assign(new Datum(Number(5)));
+            assert(root.member(new Address(Number(921)))
+                       .member(new Address(Label("rabbit-hole")))
+                       .deref().as.number == Number(5));
+            assert(root.member(yes).deref().as.number == Number(5));
+            try { root.member(no1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
+            try { root.member(no2); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
+            try { root.member(yes, 1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
+        });
     }
 }
 
@@ -178,12 +178,12 @@ public:
         this.data = [AddressNode(source)];
     }
     unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        auto a = new Address(Number(3)), b = new Address(Label("does_not_exist"));
-        assert (a.data[0].is_number);
-        assert (!b.data[0].is_number);
+        import test.framework;
+        run_test({
+            auto a = new Address(Number(3)), b = new Address(Label("does_not_exist"));
+            assert (a.data[0].is_number);
+            assert (!b.data[0].is_number);
+        });
     }
 
     private this() {}
@@ -211,13 +211,13 @@ public:
         return acc;
     }
     unittest {
-        import std.stdio;
-        scope(success) write('.');
-        scope(failure) write('F');
-        auto a = new Address(Number(358)), b = new Address(Label("alabel"));
-        auto c = a ~ b;
-        c.data[1] = AddressNode(Number(2));
-        assert (!b.data[0].is_number && b.data[0].as.label == Label("alabel"));
+        import test.framework;
+        run_test({
+            auto a = new Address(Number(358)), b = new Address(Label("alabel"));
+            auto c = a ~ b;
+            c.data[1] = AddressNode(Number(2));
+            assert (!b.data[0].is_number && b.data[0].as.label == Label("alabel"));
+        });
     }
     Address opBinary(string s)(Number next)
     if (s == "~") body {
@@ -232,10 +232,8 @@ public:
 }
 
 class UninitializedMemory : Exception { //TODO have an AladdinException?
-    this(Address address, uint location,
-         string file = __FILE__, ulong line = cast(ulong)__LINE__,
-         Throwable next = cast(Throwable)null) {
-        super("TODO", file, line, next);
+    this(string file, ulong line, Throwable next = null) {
+        super("Attempted to read uninitialized memory.", file, line, next);
     }
 }
 

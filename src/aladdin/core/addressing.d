@@ -92,12 +92,13 @@ private:
     MemoryCell[Number] by_number;
     MemoryCell[Label] by_label;
 public:
-    /* Dereference: get the datum stored here, if initialized; or set the value if one is given. */
+    /* Get the datum stored directly in this cell; dereferencing uninitialized memory is an error. */
     Datum deref() {
         if (this.datum is null)
             throw new UninitializedMemory(__FILE__, __LINE__);
         return this.datum;
     }
+    /* Set the datum stored directly in this cell. */
     void assign(Datum value) {
         this.datum = value;
     }
@@ -111,6 +112,7 @@ public:
         });
     }
 
+    /* Get a pointer to a memory cell below this one for read access.*/
     MemoryCell member(Address address, uint location = 0) {
         MemoryCell* tmp = &this;
         foreach (AddressNode index; address.data[location..$]) {
@@ -120,6 +122,7 @@ public:
         }
         return *tmp;
     }
+    /* Get a pointer to a memory cell below this one for write access.*/
     MemoryCell force_member(Address address, uint location = 0) {
         MemoryCell tmp = this;
         foreach (AddressNode index; address.data[location..$]) {

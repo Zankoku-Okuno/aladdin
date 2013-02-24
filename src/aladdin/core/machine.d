@@ -55,13 +55,12 @@
 module aladdin.core.machine;
 
 import aladdin.core.addressing : Address, MemoryCell;
+import aladdin.core.code : TextMemory;
 
 
 class AladdinMachine { //STUB
 private:
     size_t ip;
-    Instruction[] text;
+    TextMemory text;
     MemoryCell data;
-
-    size_t[Address] jump_targets;
 }

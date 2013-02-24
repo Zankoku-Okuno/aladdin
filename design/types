@@ -1,17 +1,16 @@
  == Number ==
 An arbitrary-precision signed integer. Logical operations use 2s-complement semantics.
 
- * Arithmatic Operations -- negate, add, subtract, multiply, divide (w/ remainder) (throws DivideByZero on division by zero)
- * Relational Operations -- lt, lte, eq, neq, gt, gte
- * Logical Operations -- invert, and, or, xor
- * Bitstring Operations -- arithmetic left/right shift, logical left shift, split, concatenate, rotate
+ * TODO: Arithmatic Operations -- negate, add, subtract, multiply, divide (w/ remainder) (throws DivideByZero on division by zero)
+ * TODO: Relational Operations -- lt, lte, eq, neq, gt, gte
+ * TODO: Logical Operations -- invert, and, or, xor
+ * TODO: Bitstring Operations -- arithmetic left/right shift, logical left shift, split, concatenate, rotate
  * TODO: Construct from source code text
 
  == Address ==
 A string of Numbers and Labels. The user never interacts with labels except to write them into Aladdin source code.
 
  * Concatenate
- * Read/write referenced Datum -- throws UninitializedMemory on reading from uninitialized address
  * TODO: Construct from source code text
 
  == Datum ==
@@ -25,3 +24,41 @@ Holds exacly one Datum and any number of Members. A Member is simply a memory ce
  * Dereference -- return the Datum held in the cell
  * Assign -- set the Datum held in the cell
  * Member -- using an input address, return the Member thereat
+ * TODO Check -- determine whether a member is initialized
+ * TODO Delete -- de-initialize a member; useful for saving space in memory
+
+ == Operation ==
+
+TODO: I'm not sure this design is good regarding how to actually get typechecking to sign off on it
+        perhaps, I shold just pass Datum[]'s in regardless and let the user validate/dispatch or not
+        the syntax validator can be used to shunt validation to load time
+
+One or more Microcodes and a syntax validator combined and registered under a unique name.
+
+Operations are loaded using an ISA registry (see below) defined in the same library. 
+
+The syntax validator specifies the number of operands the instruction may take. An instruction may take an exact number of operands, or a variable number. If the number of operands is variable, then one Microcode should be specified for each possibility. Syntax validation and binding of Microcode to an Instruction is done at load time without type checking the Microcode source code, so care must be taken that the Microcode is only passed exactly the number of arguments expected.
+
+ == Instruction ==
+A validated operation with its associated operands.
+
+ * TODO: Execute
+
+ == Virtual Machine ==
+Text Segment:
+Data Segment:
+Intruction Pointer:
+
+ == Microcode ==
+A function taking a known number of Datum arguments and acting on the state of the virtual machine.
+
+The user will write their own microcode (probably using D or C). This microcode is loaded using an ISA Registry (see below). The microcode interfaces with the VM using any of the below:
+
+ * TODO ??? -- enforce addressing mode (immediate, dereference, pointer)
+ * Operations on Memory Cell and Datum objects
+ * TODO ??? -- update the instruction pointer to an address (absolute)
+ * TODO ??? -- update the instruction pointer with an offset (relative)
+
+Of course, the microcode writer is free to develop arbitrary code external to the VM. As long as an interface can be created to translate data between the VM and and external component, the expressive power of the VM can be arbitrarily extended.
+
+ == ISA Registry ==

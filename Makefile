@@ -17,9 +17,12 @@ clean:
 
 # Test Objects
 
+bin/debug/errors.o: src/aladdin/core/errors.d
+	$(DC) -c $(DEBUG_FLAGS) $< -o $@
+
 bin/debug/ontology.o: src/aladdin/core/ontology.d
 	$(DC) -c $(DEBUG_FLAGS) $< -o $@
-bin/debug/addressing.o: src/aladdin/core/addressing.d src/aladdin/core/ontology.d
+bin/debug/addressing.o: src/aladdin/core/addressing.d src/aladdin/core/ontology.d src/aladdin/core/errors.d
 	$(DC) -c $(DEBUG_FLAGS) $< -o $@
 
 # Prerequisites
@@ -32,7 +35,7 @@ src/dlfcn.di: bin/config-dlfcn
 
 # Executables
 
-bin/unittest: bin/debug/ontology.o bin/debug/addressing.o test/framework.d
+bin/unittest: bin/debug/ontology.o bin/debug/addressing.o bin/debug/errors.o test/framework.d
 	$(DC) $(DEBUG_FLAGS) $^ -o $@
 
 bin/config-dlfcn: lib/config-dlfcn.c

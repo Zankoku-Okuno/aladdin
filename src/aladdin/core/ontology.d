@@ -39,7 +39,6 @@
 module aladdin.core.ontology;
 
 
-
 /*
  *  A Number is an aribtrary-precision signed integer with 2s-complement semantics for logical operations.
  *  Publicly, Aladdin supports only this kind of number to maintatin architecture-independence.
@@ -120,8 +119,6 @@ struct Number {
     }
 
 }
-
-
 
 
 /*

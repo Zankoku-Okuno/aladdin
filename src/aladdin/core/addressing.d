@@ -47,6 +47,8 @@
 module aladdin.core.addressing;
 
 import aladdin.core.ontology : Number, Label;
+import aladdin.core.errors : UninitializedMemory;
+
 
 /*
  * A datum is the fundamental data type of the virtual machine.
@@ -77,7 +79,7 @@ public:
     //addresses can be concated, dereferenced
     //numbers can be arithemtic(+-*/%) compare(<>=) logicals(&|^!)?
     //there are no operations between addresses and numbers
-}
+} /* Datum */
 
 /*
  * MemoryCells are responsible for tracking all data in the application.
@@ -152,7 +154,10 @@ public:
             try { root.member(yes, 1); assert(false); } catch (UninitializedMemory ex) { assert(true); } //STUB (check exception msg contents)
         });
     }
-}
+
+    //TODO delete memory (delete), check if memory exists (check_member)
+} /* MemoryCell */
+
 
 /*
  *  An address is a pointer to a piece of memory.
@@ -161,14 +166,11 @@ public:
  *  There are no zero-length addresses.
  */
 class Address {
-private:
-
     /* ==================================== Field ==================================== */
-
+private:
     AddressNode[] data;
 
     /* ==================================== Constructors ==================================== */
-
 public:
     /* A one-level address can be constructed polymorphically from Numbers or Labels. */
     this(Number source) {
@@ -186,10 +188,11 @@ public:
         });
     }
 
-    private this() {}
+private:
+    this() {}
 
     /* ==================================== Operators ==================================== */
-
+public:
     /* Addresses may be appended with one another. */
     Address opBinary(string s)(const Address that) const
     if (s == "~")
@@ -229,13 +232,8 @@ public:
         data ~= Node(next);
         return this;
     }
-}
+} /* Address */
 
-class UninitializedMemory : Exception { //TODO have an AladdinException?
-    this(string file, ulong line, Throwable next = null) {
-        super("Attempted to read uninitialized memory.", file, line, next);
-    }
-}
 
 private:
 /* Abstraction over labels/offsets as elements of a full address. */

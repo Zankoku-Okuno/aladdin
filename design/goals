@@ -11,3 +11,8 @@ self-modifying code -- it's a dangerous technique with little benefit over compu
 I/O operations -- I'm using this inside a compiler; ISA extensions can provide I/O if really needed
 load time -- if this matters to someone, they may create their own long-running VM manager around the Aladdin library
 space efficiency -- use Dalvik JVM, run Lotus on a nice, big computer and cross-compile if you target mobile/embedded
+fast arithmetic on large integers -- the bigint support in Aladdin is meant as a guard against future increases of register size, and the corresponding expectation of what numbers are reasonable. Most bigints should require no more than a handful of words to store, and integers that fit inside a register can use hardware directly
+
+
+Possibles:
+a string "data type". Stored as a datum holding length along with an array each element of which holds one character. Just easier to type. Also, I'll probably provide convenience methods for turning an Aladdin string into a real string so efficient ops can easily be used outside.

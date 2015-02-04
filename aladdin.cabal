@@ -17,7 +17,9 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
-  -- exposed-modules:     
+  exposed-modules:
+    Aladdin.Data,
+    Aladdin.Micro
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.7
